@@ -1,49 +1,49 @@
-let dataReferensi = [];
+function prosesKomparasi() {
+  const templateInput = document.getElementById('templateFile').files[0];
+  const referensiInput = document.getElementById('referensiFile').files[0];
+  const status = document.getElementById('status');
 
-async function loadReferensi() {
-    try {
-        const response = await fetch('https://yourdomain.com/export.php'); // ganti dengan URL Netlify/backend kamu
-        if (!response.ok) throw new Error('Gagal fetch data referensi');
-        dataReferensi = await response.json();
-        console.log('✅ Data referensi berhasil dimuat:', dataReferensi);
-    } catch (err) {
-        console.error(err);
-    }
-}
+  if (!templateInput || !referensiInput) {
+    alert('Harap upload kedua file: template dan referensi.');
+    return;
+  }
 
-document.getElementById('inputExcel').addEventListener('change', handleFile, false);
+  status.textContent = '📤 Memproses file...';
 
-async function handleFile(e) {
-    await loadReferensi(); // pastikan data referensi sudah dimuat
+  const readerReferensi = new FileReader();
+  readerReferensi.onload = function (e) {
+    const dataReferensi = new Uint8Array(e.target.result);
+    const wbRef = XLSX.read(dataReferensi, { type: 'array' });
+    const refSheet = wbRef.Sheets[wbRef.SheetNames[0]];
+    const refData = XLSX.utils.sheet_to_json(refSheet);
 
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
+    const readerTemplate = new FileReader();
+    readerTemplate.onload = function (evt) {
+      const dataTemplate = new Uint8Array(evt.target.result);
+      const wbTemplate = XLSX.read(dataTemplate, { type: 'array' });
+      const sheetName = wbTemplate.SheetNames[0];
+      const sheet = wbTemplate.Sheets[sheetName];
 
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const newSheet = { ...sheet };
+      // Mulai isi dari baris ke-7
+      for (let i = 0; i < refData.length; i++) {
+        const row = i + 7;
+        const ref = refData[i];
 
-        // mulai dari baris ke-7, karena C7 dst
-        for (let i = 0; i < dataReferensi.length; i++) {
-            const row = i + 7; // Excel row (1-based)
-            const ref = dataReferensi[i];
+        sheet[`C${row}`] = { t: 's', v: ref.nama_barang || '' };   // C7 = B2 (nama barang)
+        sheet[`D${row}`] = { t: 's', v: ref.deskripsi || '' };     // D7 = G2
+        sheet[`E${row}`] = { t: 's', v: ref.url_gambar || '' };    // E7 = H2
+        sheet[`X${row}`] = { t: 'n', v: Number(ref.harga) || 0 };  // X7 = C2
+        sheet[`Y${row}`] = { t: 's', v: ref.warna || '' };         // Y7 = F2
+        sheet[`Z${row}`] = { t: 's', v: ref.sku || '' };           // Z7 = A2
+      }
 
-            // Mapping sesuai permintaan
-            newSheet[`C${row}`] = { t: 's', v: ref.nama_barang };   // C7 → B2 (nama)
-            newSheet[`D${row}`] = { t: 's', v: ref.deskripsi };     // D7 → G2 (deskripsi)
-            newSheet[`E${row}`] = { t: 's', v: ref.url_gambar };    // E7 → H2 (url_gambar)
-            newSheet[`X${row}`] = { t: 'n', v: Number(ref.harga) }; // X7 → C2 (harga)
-            newSheet[`Y${row}`] = { t: 's', v: ref.warna };         // Y7 → F2 (warna)
-            newSheet[`Z${row}`] = { t: 's', v: ref.sku };           // Z7 → A2 (SKU)
-        }
+      const newWorkbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(newWorkbook, sheet, sheetName);
+      XLSX.writeFile(newWorkbook, 'hasil_tiktokshop.xlsx');
 
-        // Buat file baru dan download
-        const newWorkbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(newWorkbook, newSheet, sheetName);
-        XLSX.writeFile(newWorkbook, 'hasil_tiktokshop.xlsx');
+      status.textContent = '✅ Proses selesai. File berhasil diunduh.';
     };
-    reader.readAsArrayBuffer(file);
+    readerTemplate.readAsArrayBuffer(templateInput);
+  };
+  readerReferensi.readAsArrayBuffer(referensiInput);
 }
