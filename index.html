@@ -1,24 +1,37 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Excel Matcher</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script defer src="script.js"></script>
-</head>
-<body>
-  <h1>Cocokkan Excel A dan Excel B</h1>
-
-  <label>Upload Excel A: </label>
-  <input type="file" id="fileA" accept=".xlsx, .xls"><br><br>
-
-  <label>Upload Excel B: </label>
-  <input type="file" id="fileB" accept=".xlsx, .xls"><br><br>
-
-  <button id="processBtn">Proses</button>
-
-  <br><br>
-  <a id="downloadLink" style="display:none;">Download Hasil</a>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Excel Compare App – TikTokShop</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
+
+  <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-3xl text-center">
+    <h1 class="text-2xl font-bold text-indigo-600 mb-4">📦 TikTokShop Excel Comparator</h1>
+    <p class="text-gray-600 mb-6">Upload file template TikTokShop dan file referensi hasil export. Sistem akan otomatis mengisi datanya.</p>
+
+    <div class="mb-4 text-left">
+      <label for="templateFile" class="block font-medium mb-1">1️⃣ File Template TikTokShop:</label>
+      <input type="file" id="templateFile" accept=".xlsx, .xls" class="w-full px-3 py-2 border rounded"/>
+    </div>
+
+    <div class="mb-6 text-left">
+      <label for="referensiFile" class="block font-medium mb-1">2️⃣ File Referensi (hasil export.php):</label>
+      <input type="file" id="referensiFile" accept=".xlsx, .xls" class="w-full px-3 py-2 border rounded"/>
+    </div>
+
+    <button onclick="prosesKomparasi()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded shadow">
+      🔁 Proses & Download
+    </button>
+
+    <div id="status" class="mt-4 text-sm text-gray-500"></div>
+
+    <footer class="mt-10 text-gray-400 text-xs">© 2025 Excel Compare App</footer>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
