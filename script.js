@@ -1,66 +1,49 @@
-let workbookA, workbookB;
+let dataReferensi = [];
 
-document.getElementById('fileA').addEventListener('change', handleFileA);
-document.getElementById('fileB').addEventListener('change', handleFileB);
-document.getElementById('processBtn').addEventListener('click', processFiles);
-
-function handleFileA(event) {
-  const file = event.target.files[0];
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    workbookA = XLSX.read(e.target.result, { type: 'binary' });
-  };
-  reader.readAsBinaryString(file);
+async function loadReferensi() {
+    try {
+        const response = await fetch('https://yourdomain.com/export.php'); // ganti dengan URL Netlify/backend kamu
+        if (!response.ok) throw new Error('Gagal fetch data referensi');
+        dataReferensi = await response.json();
+        console.log('✅ Data referensi berhasil dimuat:', dataReferensi);
+    } catch (err) {
+        console.error(err);
+    }
 }
 
-function handleFileB(event) {
-  const file = event.target.files[0];
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    workbookB = XLSX.read(e.target.result, { type: 'binary' });
-  };
-  reader.readAsBinaryString(file);
-}
+document.getElementById('inputExcel').addEventListener('change', handleFile, false);
 
-function processFiles() {
-  if (!workbookA || !workbookB) {
-    alert("Pastikan kedua file sudah di-upload.");
-    return;
-  }
+async function handleFile(e) {
+    await loadReferensi(); // pastikan data referensi sudah dimuat
 
-  const sheetA = workbookA.Sheets[workbookA.SheetNames[0]];
-  const sheetB = workbookB.Sheets[workbookB.SheetNames[0]];
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
 
-  const dataA = XLSX.utils.sheet_to_json(sheetA);
-  const dataB = XLSX.utils.sheet_to_json(sheetB);
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const newSheet = { ...sheet };
 
-  // Contoh: cocokkan berdasarkan "ID", dan ambil "Nama" dari Excel A ke Excel B
-  const updatedDataB = dataB.map(rowB => {
-    const match = dataA.find(rowA => rowA.ID === rowB.ID);
-    return {
-      ...rowB,
-      Nama: match ? match.Nama : rowB.Nama || ""
+        // mulai dari baris ke-7, karena C7 dst
+        for (let i = 0; i < dataReferensi.length; i++) {
+            const row = i + 7; // Excel row (1-based)
+            const ref = dataReferensi[i];
+
+            // Mapping sesuai permintaan
+            newSheet[`C${row}`] = { t: 's', v: ref.nama_barang };   // C7 → B2 (nama)
+            newSheet[`D${row}`] = { t: 's', v: ref.deskripsi };     // D7 → G2 (deskripsi)
+            newSheet[`E${row}`] = { t: 's', v: ref.url_gambar };    // E7 → H2 (url_gambar)
+            newSheet[`X${row}`] = { t: 'n', v: Number(ref.harga) }; // X7 → C2 (harga)
+            newSheet[`Y${row}`] = { t: 's', v: ref.warna };         // Y7 → F2 (warna)
+            newSheet[`Z${row}`] = { t: 's', v: ref.sku };           // Z7 → A2 (SKU)
+        }
+
+        // Buat file baru dan download
+        const newWorkbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(newWorkbook, newSheet, sheetName);
+        XLSX.writeFile(newWorkbook, 'hasil_tiktokshop.xlsx');
     };
-  });
-
-  const newSheet = XLSX.utils.json_to_sheet(updatedDataB);
-  const newWorkbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(newWorkbook, newSheet, "Hasil");
-
-  const wbout = XLSX.write(newWorkbook, { bookType: 'xlsx', type: 'binary' });
-
-  // Convert to Blob for download
-  const blob = new Blob([s2ab(wbout)], { type: "application/octet-stream" });
-  const link = document.getElementById('downloadLink');
-  link.href = URL.createObjectURL(blob);
-  link.download = "hasil.xlsx";
-  link.style.display = 'inline';
-  link.textContent = 'Download Hasil';
-}
-
-function s2ab(s) {
-  const buf = new ArrayBuffer(s.length);
-  const view = new Uint8Array(buf);
-  for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
-  return buf;
+    reader.readAsArrayBuffer(file);
 }
