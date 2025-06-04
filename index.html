@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Excel Matcher</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <h1>Cocokkan Excel A dan Excel B</h1>
+
+  <label>Upload Excel A: </label>
+  <input type="file" id="fileA" accept=".xlsx, .xls"><br><br>
+
+  <label>Upload Excel B: </label>
+  <input type="file" id="fileB" accept=".xlsx, .xls"><br><br>
+
+  <button id="processBtn">Proses</button>
+
+  <br><br>
+  <a id="downloadLink" style="display:none;">Download Hasil</a>
+</body>
+</html>
